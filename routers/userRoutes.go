@@ -17,11 +17,11 @@ func SetUserRoutes(router *echo.Echo) *echo.Echo {
 	//Create New User
 	router.POST("/user", controllerUser.CreateUser)
 	//Update User
-	router.PUT("/user", controllerUser.UpdateUser)
+	router.PUT("/user", controllerUser.UpdateUser, middleware.JWT([]byte(signingKey)))
 	//Find Single User
-	router.GET("/user/:username", controllerUser.FindOneUser)
+	router.GET("/user/:username", controllerUser.FindOneUser, middleware.JWT([]byte(signingKey)))
 	//Delete User
-	router.DELETE("/user/:username", controllerUser.DeleteUser)
+	router.DELETE("/user/:username", controllerUser.DeleteUser, middleware.JWT([]byte(signingKey)))
 
 	return router
 }

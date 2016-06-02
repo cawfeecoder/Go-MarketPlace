@@ -1,7 +1,6 @@
 package controllerUser
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 
@@ -35,7 +34,7 @@ func FindAllUser(c echo.Context) error {
 		var token = r.ReplaceAllString(c.Request().Header().Get("Authorization"), "")
 		auth, err := servicesJWT.RequiresAuth(token)
 		if err != nil {
-			return err
+			return c.JSON(409, err)
 		}
 		if auth {
 			users := servicesUser.FindAllUser()
@@ -48,29 +47,65 @@ func FindAllUser(c echo.Context) error {
 
 //FindOneUser finds one application user
 func FindOneUser(c echo.Context) error {
-	user := servicesUser.FindOneUser(c.Param("username"))
-	return c.JSON(200, user)
+	if c.Request().Header().Get("Authorization") != "" {
+		r, _ := regexp.Compile("((Bearer )*)")
+		var token = r.ReplaceAllString(c.Request().Header().Get("Authorization"), "")
+		auth, err := servicesJWT.RequiresAuth(token)
+		if err != nil {
+			return c.JSON(409, err)
+		}
+		if auth {
+			user := servicesUser.FindOneUser(c.Param("username"))
+			return c.JSON(200, user)
+		}
+		return c.JSON(409, "Error")
+	}
+	return c.JSON(409, "Error")
 }
 
 //UpdateUser updates a single user
 func UpdateUser(c echo.Context) error {
-	u := &modelUser.User{}
+	if c.Request().Header().Get("Authorization") != "" {
+		r, _ := regexp.Compile("((Bearer )*)")
+		var token = r.ReplaceAllString(c.Request().Header().Get("Authorization"), "")
+		auth, err := servicesJWT.RequiresAuth(token)
+		if err != nil {
+			return c.JSON(409, err)
+		}
+		if auth {
+			u := &modelUser.User{}
 
-	if err := c.Bind(u); err != nil {
-		return err
+			if err := c.Bind(u); err != nil {
+				return c.JSON(409, err)
+			}
+			fmt.Println("Bind Successful")
+
+			if err := servicesUser.UpdateUser(u); err != nil {
+				return c.JSON(409, err)
+			}
+			fmt.Println("User Update Successful")
+
+			return c.JSON(200, nil)
+		}
+		return c.JSON(409, "Error")
 	}
-	fmt.Println("Bind Successful")
-
-	if err := servicesUser.UpdateUser(u); err != nil {
-		return err
-	}
-	fmt.Println("User Update Successful")
-
-	return errors.New("User has been updated.")
+	return c.JSON(409, "Error")
 }
 
 //DeleteUser deletes the specified user
 func DeleteUser(c echo.Context) error {
-	user := servicesUser.DeleteUser(c.Param("username"))
-	return c.JSON(200, user)
+	if c.Request().Header().Get("Authorization") != "" {
+		r, _ := regexp.Compile("((Bearer )*)")
+		var token = r.ReplaceAllString(c.Request().Header().Get("Authorization"), "")
+		auth, err := servicesJWT.RequiresAuth(token)
+		if err != nil {
+			return c.JSON(409, err)
+		}
+		if auth {
+			user := servicesUser.DeleteUser(c.Param("username"))
+			return c.JSON(200, user)
+		}
+		return c.JSON(409, "Error")
+	}
+	return c.JSON(409, "Error")
 }
